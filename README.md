@@ -1,6 +1,10 @@
-<p align="center">
-  <img src="https://www.corda.net/wp-content/uploads/2016/11/fg005_corda_b.png" alt="Corda" width="500">
-</p>
+
+
+# Command Samples
+in `PartyA` terminal
+
+* `start IOUFlow iouValue: 99, otherParty: "O=PartyB,L=New York,C=US"`
+* `run vaultQuery contractStateType: com.template.states.IOUState`
 
 # CorDapp Template - Java
 

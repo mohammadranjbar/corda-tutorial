@@ -9,6 +9,10 @@ import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.utilities.ProgressTracker;
 
+import java.security.PublicKey;
+import java.util.Arrays;
+import java.util.List;
+
 // Replace Initiator's definition with:
 @InitiatingFlow
 @StartableByRPC
@@ -38,25 +42,34 @@ public class IOUFlow extends FlowLogic<Void> {
     @Override
     public Void call() throws FlowException {
         // We retrieve the notary identity from the network map.
+        // We retrieve the notary identity from the network map.
         Party notary = getServiceHub().getNetworkMapCache().getNotaryIdentities().get(0);
 
-        // We create the transaction components.
+// We create the transaction components.
         IOUState outputState = new IOUState(iouValue, getOurIdentity(), otherParty);
-        Command command = new Command<>(new IOUContract.Commands.Action(), getOurIdentity().getOwningKey());
+        List<PublicKey> requiredSigners = Arrays.asList(getOurIdentity().getOwningKey(), otherParty.getOwningKey());
+        Command command = new Command<>(new IOUContract.Create(), requiredSigners);
 
-        // We create a transaction builder and add the components.
+// We create a transaction builder and add the components.
         TransactionBuilder txBuilder = new TransactionBuilder(notary)
                 .addOutputState(outputState, IOUContract.ID)
                 .addCommand(command);
 
-        // Signing the transaction.
+// Verifying the transaction.
+        txBuilder.verify(getServiceHub());
+
+// Signing the transaction.
         SignedTransaction signedTx = getServiceHub().signInitialTransaction(txBuilder);
 
-        // Creating a session with the other party.
+// Creating a session with the other party.
         FlowSession otherPartySession = initiateFlow(otherParty);
 
-        // We finalise the transaction and then send it to the counterparty.
-        subFlow(new FinalityFlow(signedTx, otherPartySession));
+// Obtaining the counterparty's signature.
+        SignedTransaction fullySignedTx = subFlow(new CollectSignaturesFlow(
+                signedTx, Arrays.asList(otherPartySession), CollectSignaturesFlow.tracker()));
+
+// Finalising the transaction.
+        subFlow(new FinalityFlow(fullySignedTx, otherPartySession));
 
         return null;
     }
