@@ -1,7 +1,7 @@
 package com.template.states;
 
 // Add this import:
-import com.template.contracts.TemplateContract;
+import com.template.contracts.IOUContract;
 import net.corda.core.contracts.BelongsToContract;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.identity.AbstractParty;
@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 // Replace TemplateState's definition with:
-@BelongsToContract(TemplateContract.class)
+@BelongsToContract(IOUContract.class)
 public class IOUState implements ContractState {
     private final int value;
     private final Party lender;
